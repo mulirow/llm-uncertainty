@@ -1,16 +1,9 @@
-from sklearn.metrics import (
-    roc_auc_score,
-    average_precision_score,
-    roc_curve,
-    precision_recall_curve,
-)
-from netcal.presentation import ReliabilityDiagram
 import numpy as np
 from netcal.metrics import ECE
-
-
-import numpy as np
-from sklearn import metrics as skm
+from sklearn.metrics import (
+    average_precision_score,
+    roc_auc_score,
+)
 
 
 class SimpleStatsCache:

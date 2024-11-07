@@ -10,23 +10,22 @@ And two types of answers:
 """
 
 # %%
-import json, os, sys, pdb, json, re
-import pandas as pd
+import json
 import os.path as osp
+import pdb
+import re
+from argparse import ArgumentParser
+from typing import Dict
+
 import matplotlib
 
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
+from utils.extract_result_lib import (extract_hint_response_multistep,
+                                      extract_hint_response_self_evaluate,
+                                      extract_hint_response_top_k,
+                                      extract_hint_response_vanilla)
 
+matplotlib.use("Agg")
 # %matplotlib inline
-from argparse import ArgumentParser
-from utils.extract_result_lib import (
-    extract_hint_response_vanilla,
-    extract_hint_response_self_evaluate,
-    extract_hint_response_top_k,
-    extract_hint_response_multistep,
-)
-from typing import Tuple, Dict
 
 # %%
 ################# CONFIG #####################

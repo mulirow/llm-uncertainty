@@ -1,5 +1,5 @@
-import re, pdb
-from typing import Tuple, Optional, Dict
+import re
+from typing import Dict, Tuple
 
 word_to_digit = {
     "zero": 0,

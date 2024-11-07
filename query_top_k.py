@@ -7,13 +7,16 @@ Sampling strategy: can be "misleading" or "self_random"; can query only once by 
 4. record the results
 """
 
-import os, pdb, time, re
-import os.path as osp
-import random
 import json
+import os
+import os.path as osp
+import pdb
+import random
+import time
+from argparse import ArgumentParser
+
 from utils.dataset_loader import load_dataset
 from utils.llm_query_helper import calculate_result_per_question
-from argparse import ArgumentParser
 
 openai_key = "your_openai_key"  # TODO: replace with your openai key
 

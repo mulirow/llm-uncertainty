@@ -14,13 +14,15 @@ The implementation is as follows:
 
 """
 
-import os, pdb, time, re
-import os.path as osp
-import random
 import json
-from utils.dataset_loader import load_dataset, load_dataset_w_prediction
-from utils.llm_query_helper import calculate_result_per_question
+import os
+import os.path as osp
+import pdb
+import time
 from argparse import ArgumentParser
+
+from utils.dataset_loader import load_dataset_w_prediction
+from utils.llm_query_helper import calculate_result_per_question
 
 openai_key = "your_openai_key"  # TODO: replace with your openai key
 

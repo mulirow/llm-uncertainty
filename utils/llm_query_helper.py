@@ -1,4 +1,6 @@
-import openai, pdb
+import pdb
+
+import openai
 
 
 # calculate_result_per_question('vicuna', 'a', 'a', {}, {}, {}, 'hint0', 'multi', False)

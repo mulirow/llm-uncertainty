@@ -2,22 +2,11 @@
 # Ref: https://github.com/sylinrl/TruthfulQA/blob/main/truthfulqa/metrics.py
 # Ref: https://github.com/sylinrl/TruthfulQA/blob/main/truthfulqa/utilities.py
 
-import re, pdb
 import os
-import json
-import random
-import transformers
-from tqdm import tqdm
-import argparse
-import pandas as pd
-
-import ssl
-import urllib.request
-import zipfile
-
+import pdb
 
 # Load model directly
-from transformers import AutoTokenizer, AutoModelForCausalLM
+from transformers import AutoModelForCausalLM, AutoTokenizer
 
 
 def LlamaChatCompletion(model_name, prompt, max_tokens):

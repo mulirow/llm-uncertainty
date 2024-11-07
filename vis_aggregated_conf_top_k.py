@@ -16,20 +16,21 @@ This code is used to visualize the performance (e.g. ACC/AUCROC/ECE) of  **Confi
 """
 
 # %%
-import json, os, sys, pdb, json
-import numpy as np
+import json
+import os
 import os.path as osp
-import matplotlib
-
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
-
-# %matplotlib inline
-import pandas as pd
+import pdb
 from argparse import ArgumentParser
-from adjustText import adjust_text
 from collections import Counter
 
+import matplotlib
+import matplotlib.pyplot as plt
+import numpy as np
+
+from adjustText import adjust_text
+
+# %matplotlib inline
+matplotlib.use("Agg")
 
 option_list = [
     "A",

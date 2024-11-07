@@ -1,5 +1,4 @@
 from utils.inference import chat_loop
-import argparse
 
 
 def VicunaChatCompletion(question):

@@ -3,33 +3,30 @@
 import abc
 import gc
 import math
-from typing import Optional
 import sys
 import warnings
+from typing import Optional
 
 import psutil
 import torch
-from transformers import (
-    AutoTokenizer,
-    AutoModelForCausalLM,
-    LlamaTokenizer,
-    LlamaForCausalLM,
-    AutoModel,
-    AutoModelForSeq2SeqLM,
-    T5Tokenizer,
-    AutoConfig,
-)
-
 from fastchat.conversation import (
     conv_templates,
     get_default_conv_template,
-    SeparatorStyle,
 )
 from fastchat.serve.compression import load_compress_model
 from fastchat.serve.monkey_patch_non_inplace import (
     replace_llama_attn_with_non_inplace_operations,
 )
 from fastchat.serve.serve_chatglm import chatglm_generate_stream
+from transformers import (
+    AutoModel,
+    AutoModelForCausalLM,
+    AutoModelForSeq2SeqLM,
+    AutoTokenizer,
+    LlamaForCausalLM,
+    LlamaTokenizer,
+    T5Tokenizer,
+)
 
 
 def raise_warning_for_incompatible_cpu_offloading_configuration(
