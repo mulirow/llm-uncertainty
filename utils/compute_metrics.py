@@ -1,4 +1,9 @@
-from sklearn.metrics import roc_auc_score, average_precision_score, roc_curve, precision_recall_curve
+from sklearn.metrics import (
+    roc_auc_score,
+    average_precision_score,
+    roc_curve,
+    precision_recall_curve,
+)
 from netcal.presentation import ReliabilityDiagram
 import numpy as np
 from netcal.metrics import ECE
@@ -6,6 +11,7 @@ from netcal.metrics import ECE
 
 import numpy as np
 from sklearn import metrics as skm
+
 
 class SimpleStatsCache:
     def __init__(self, confids, correct):
@@ -52,11 +58,15 @@ class SimpleStatsCache:
     def residuals(self):
         return 1 - self.correct
 
+
 def area_under_risk_coverage_score(confids, correct):
     stats_cache = SimpleStatsCache(confids, correct)
     _, risks, weights = stats_cache.rc_curve_stats
     AURC_DISPLAY_SCALE = 1000
-    return sum([(risks[i] + risks[i + 1]) * 0.5 * weights[i] for i in range(len(weights))])* AURC_DISPLAY_SCALE
+    return (
+        sum([(risks[i] + risks[i + 1]) * 0.5 * weights[i] for i in range(len(weights))])
+        * AURC_DISPLAY_SCALE
+    )
 
 
 def compute_conf_metrics(y_true, y_confs):
@@ -65,32 +75,31 @@ def compute_conf_metrics(y_true, y_confs):
     # ACC
     accuracy = sum(y_true) / len(y_true)
     print("accuracy: ", accuracy)
-    result_matrics['acc'] = accuracy
+    result_matrics["acc"] = accuracy
 
     # use np to test if y_confs are all in [0, 1]
     assert all([x >= 0 and x <= 1 for x in y_confs]), y_confs
     y_confs, y_true = np.array(y_confs), np.array(y_true)
-    
+
     # AUCROC
     roc_auc = roc_auc_score(y_true, y_confs)
     print("ROC AUC score:", roc_auc)
-    result_matrics['auroc'] = roc_auc
+    result_matrics["auroc"] = roc_auc
 
     # AUPRC-Positive
     auprc = average_precision_score(y_true, y_confs)
     print("AUC PRC Positive score:", auprc)
-    result_matrics['auprc_p'] = auprc
+    result_matrics["auprc_p"] = auprc
 
     # AUPRC-Negative
-    auprc = average_precision_score(1- y_true, 1 - y_confs)
+    auprc = average_precision_score(1 - y_true, 1 - y_confs)
     print("AUC PRC Negative score:", auprc)
-    result_matrics['auprc_n'] = auprc
-    
+    result_matrics["auprc_n"] = auprc
+
     # AURC from https://github.com/IML-DKFZ/fd-shifts/tree/main
     aurc = area_under_risk_coverage_score(y_confs, y_true)
-    result_matrics['aurc'] = aurc
+    result_matrics["aurc"] = aurc
     print("AURC score:", aurc)
-
 
     # ECE
     n_bins = 10
@@ -98,6 +107,6 @@ def compute_conf_metrics(y_true, y_confs):
     ece = ECE(n_bins)
     ece_score = ece.measure(np.array(y_confs), np.array(y_true))
     print("ECE:", ece_score)
-    result_matrics['ece'] = ece_score
+    result_matrics["ece"] = ece_score
 
     return result_matrics

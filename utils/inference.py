@@ -1,4 +1,5 @@
 """Inference for FastChat models."""
+
 import abc
 import gc
 import math
@@ -30,22 +31,32 @@ from fastchat.serve.monkey_patch_non_inplace import (
 )
 from fastchat.serve.serve_chatglm import chatglm_generate_stream
 
-def raise_warning_for_incompatible_cpu_offloading_configuration(device: str, load_8bit: bool, cpu_offloading: bool):
+
+def raise_warning_for_incompatible_cpu_offloading_configuration(
+    device: str, load_8bit: bool, cpu_offloading: bool
+):
     if cpu_offloading:
         if not load_8bit:
-            warnings.warn("The cpu-offloading feature can only be used while also using 8-bit-quantization.\n"
-                          "Use '--load-8bit' to enable 8-bit-quantization\n"
-                          "Continuing without cpu-offloading enabled\n")
+            warnings.warn(
+                "The cpu-offloading feature can only be used while also using 8-bit-quantization.\n"
+                "Use '--load-8bit' to enable 8-bit-quantization\n"
+                "Continuing without cpu-offloading enabled\n"
+            )
             return False
         if not "linux" in sys.platform:
-            warnings.warn("CPU-offloading is only supported on linux-systems due to the limited compatability with the bitsandbytes-package\n"
-                          "Continuing without cpu-offloading enabled\n")
+            warnings.warn(
+                "CPU-offloading is only supported on linux-systems due to the limited compatability with the bitsandbytes-package\n"
+                "Continuing without cpu-offloading enabled\n"
+            )
             return False
         if device != "cuda":
-            warnings.warn("CPU-offloading is only enabled when using CUDA-devices\n"
-                          "Continuing without cpu-offloading enabled\n")
+            warnings.warn(
+                "CPU-offloading is only enabled when using CUDA-devices\n"
+                "Continuing without cpu-offloading enabled\n"
+            )
             return False
     return cpu_offloading
+
 
 def get_gpu_memory(max_gpus=None):
     gpu_memory = []
@@ -78,12 +89,21 @@ def raise_warning_for_old_weights(model_path, model):
                 "3. Downgrade fschat to fschat==0.1.10 (Not recommonded).\n"
             )
 
+
 def load_model(
-    model_path, device, num_gpus, max_gpu_memory=None, load_8bit=False, cpu_offloading=False, debug=False
+    model_path,
+    device,
+    num_gpus,
+    max_gpu_memory=None,
+    load_8bit=False,
+    cpu_offloading=False,
+    debug=False,
 ):
-    #print(model_path)
-    #print('>>>>>>>>>>>>>>>>>>')
-    cpu_offloading = raise_warning_for_incompatible_cpu_offloading_configuration(device, load_8bit, cpu_offloading)
+    # print(model_path)
+    # print('>>>>>>>>>>>>>>>>>>')
+    cpu_offloading = raise_warning_for_incompatible_cpu_offloading_configuration(
+        device, load_8bit, cpu_offloading
+    )
     if device == "cpu":
         kwargs = {"torch_dtype": torch.float32}
     elif device == "cuda":
@@ -91,9 +111,9 @@ def load_model(
         if num_gpus != 1:
             kwargs["device_map"] = "auto"
             if max_gpu_memory is None:
-                kwargs[
-                    "device_map"
-                ] = "sequential"  # This is important for not the same VRAM sizes
+                kwargs["device_map"] = (
+                    "sequential"  # This is important for not the same VRAM sizes
+                )
                 available_gpu_memory = get_gpu_memory(num_gpus)
                 kwargs["max_memory"] = {
                     i: str(int(available_gpu_memory[i] * 0.85)) + "GiB"
@@ -112,16 +132,24 @@ def load_model(
     if cpu_offloading:
         # raises an error on incompatible platforms
         from transformers import BitsAndBytesConfig
+
         if "max_memory" in kwargs:
-            kwargs["max_memory"]["cpu"] = str(math.floor(psutil.virtual_memory().available / 2**20)) + 'Mib'
-        kwargs["quantization_config"] = BitsAndBytesConfig(load_in_8bit_fp32_cpu_offload=cpu_offloading)
+            kwargs["max_memory"]["cpu"] = (
+                str(math.floor(psutil.virtual_memory().available / 2**20)) + "Mib"
+            )
+        kwargs["quantization_config"] = BitsAndBytesConfig(
+            load_in_8bit_fp32_cpu_offload=cpu_offloading
+        )
         kwargs["load_in_8bit"] = load_8bit
     elif load_8bit:
         if num_gpus != 1:
-            warnings.warn("8-bit quantization is not supported for multi-gpu inference.")
+            warnings.warn(
+                "8-bit quantization is not supported for multi-gpu inference."
+            )
         else:
-            return load_compress_model(model_path=model_path,
-                device=device, torch_dtype=kwargs["torch_dtype"])
+            return load_compress_model(
+                model_path=model_path, device=device, torch_dtype=kwargs["torch_dtype"]
+            )
 
     if "chatglm" in model_path:
         tokenizer = AutoTokenizer.from_pretrained(model_path, trust_remote_code=True)
@@ -139,22 +167,30 @@ def load_model(
             model_path, low_cpu_mem_usage=True, **kwargs
         )
     elif "t5" in model_path:
-        model = AutoModelForSeq2SeqLM.from_pretrained(model_path,
-                                                      low_cpu_mem_usage=True, **kwargs)
+        model = AutoModelForSeq2SeqLM.from_pretrained(
+            model_path, low_cpu_mem_usage=True, **kwargs
+        )
         tokenizer = T5Tokenizer.from_pretrained(model_path, use_fast=False)
     elif "RWKV-4" in model_path:
         from fastchat.serve.rwkv_model import RwkvModel
+
         model = RwkvModel(model_path)
-        tokenizer = AutoTokenizer.from_pretrained('EleutherAI/pythia-160m', use_fast=True)
+        tokenizer = AutoTokenizer.from_pretrained(
+            "EleutherAI/pythia-160m", use_fast=True
+        )
     elif "buddy" in model_path:
         if "-bf16" in model_path:
             kwargs["torch_dtype"] = torch.bfloat16
-            warnings.warn("## This is a bf16(bfloat16) variant of OpenBuddy. Please make sure your GPU supports bf16.")
-        model = LlamaForCausalLM.from_pretrained(model_path, low_cpu_mem_usage=True, **kwargs)
+            warnings.warn(
+                "## This is a bf16(bfloat16) variant of OpenBuddy. Please make sure your GPU supports bf16."
+            )
+        model = LlamaForCausalLM.from_pretrained(
+            model_path, low_cpu_mem_usage=True, **kwargs
+        )
         tokenizer = LlamaTokenizer.from_pretrained(model_path)
     else:
         print(model_path)
-        print('------------')
+        print("------------")
         tokenizer = AutoTokenizer.from_pretrained(model_path, use_fast=False)
         model = AutoModelForCausalLM.from_pretrained(
             model_path, low_cpu_mem_usage=True, **kwargs
@@ -188,35 +224,43 @@ def generate_stream(
     output_ids = list(input_ids)
 
     if model.config.is_encoder_decoder:
-         max_src_len = context_len
+        max_src_len = context_len
     else:
-         max_src_len = context_len - max_new_tokens - 8
+        max_src_len = context_len - max_new_tokens - 8
 
     input_ids = input_ids[-max_src_len:]
 
     if model.config.is_encoder_decoder:
-         encoder_output = model.encoder(input_ids=torch.as_tensor([input_ids],
-                                                      device=device))[0]
-         start_ids = torch.as_tensor([[model.generation_config.decoder_start_token_id]],
-                     dtype=torch.int64, device=device)
+        encoder_output = model.encoder(
+            input_ids=torch.as_tensor([input_ids], device=device)
+        )[0]
+        start_ids = torch.as_tensor(
+            [[model.generation_config.decoder_start_token_id]],
+            dtype=torch.int64,
+            device=device,
+        )
 
     for i in range(max_new_tokens):
         if i == 0:
             if model.config.is_encoder_decoder:
-                 out = model.decoder(input_ids=start_ids,
-                                     encoder_hidden_states=encoder_output,
-                                     use_cache=True)
-                 logits = model.lm_head(out[0])
+                out = model.decoder(
+                    input_ids=start_ids,
+                    encoder_hidden_states=encoder_output,
+                    use_cache=True,
+                )
+                logits = model.lm_head(out[0])
             else:
                 out = model(torch.as_tensor([input_ids], device=device), use_cache=True)
                 logits = out.logits
             past_key_values = out.past_key_values
         else:
             if model.config.is_encoder_decoder:
-                out = model.decoder(input_ids=torch.as_tensor([[token]], device=device),
-                             encoder_hidden_states=encoder_output,
-                             use_cache=True,
-                             past_key_values=past_key_values)
+                out = model.decoder(
+                    input_ids=torch.as_tensor([[token]], device=device),
+                    encoder_hidden_states=encoder_output,
+                    use_cache=True,
+                    past_key_values=past_key_values,
+                )
 
                 logits = model.lm_head(out[0])
             else:
@@ -255,8 +299,11 @@ def generate_stream(
                 tmp_output_ids = output_ids[input_echo_len:]
                 rfind_start = 0
 
-            output = tokenizer.decode(tmp_output_ids, skip_special_tokens=True, 
-                                      spaces_between_special_tokens=False)
+            output = tokenizer.decode(
+                tmp_output_ids,
+                skip_special_tokens=True,
+                spaces_between_special_tokens=False,
+            )
             if stop_str:
                 pos = output.rfind(stop_str, rfind_start)
                 if pos != -1:
@@ -310,37 +357,36 @@ def chat_loop(
         conv = conv_templates[conv_template].copy()
     else:
         conv = get_default_conv_template(model_path)
-    #print(conv.roles[0])
-    #print('conv<<<<<<<<<<<<<<<<')
-
+    # print(conv.roles[0])
+    # print('conv<<<<<<<<<<<<<<<<')
 
     conv.append_message(conv.roles[0], inp)
     conv.append_message(conv.roles[1], None)
 
     if is_chatglm:
         generate_stream_func = chatglm_generate_stream
-        prompt = conv.messages[conv.offset:]
+        prompt = conv.messages[conv.offset :]
     else:
         generate_stream_func = generate_stream
         prompt = conv.get_prompt()
-    #print('prompt>>>>>>>>>>>>>>>>>')
-    #print(prompt)
-    #print('prompt>>>>>>>>>>>>>>>>>')
+    # print('prompt>>>>>>>>>>>>>>>>>')
+    # print(prompt)
+    # print('prompt>>>>>>>>>>>>>>>>>')
     gen_params = {
         "model": model_path,
-            "prompt": prompt,
-            "temperature": temperature,
-            "max_new_tokens": max_new_tokens,
-            "stop": conv.stop_str,
-            "stop_token_ids": conv.stop_token_ids,
-            "echo": False,
+        "prompt": prompt,
+        "temperature": temperature,
+        "max_new_tokens": max_new_tokens,
+        "stop": conv.stop_str,
+        "stop_token_ids": conv.stop_token_ids,
+        "echo": False,
     }
-    #print(conv.roles[1])
-    #print('##############')
-    #chatio.prompt_for_output(conv.roles[1])
-    output_stream = generate_stream_func(model, tokenizer, gen_params, device)    
+    # print(conv.roles[1])
+    # print('##############')
+    # chatio.prompt_for_output(conv.roles[1])
+    output_stream = generate_stream_func(model, tokenizer, gen_params, device)
 
-    try: 
+    try:
         output = next(output_stream)
         while True:
             output = output
@@ -348,16 +394,15 @@ def chat_loop(
     except StopIteration:
         answer = output
         pass  # 生成器结束,do nothing
-    
-    #outputs = chatio.stream_output(output_stream)
+
+    # outputs = chatio.stream_output(output_stream)
     # NOTE: strip is important to align with the training data.
-    #conv.messages[-1][-1] = outputs.strip()
+    # conv.messages[-1][-1] = outputs.strip()
 
-    #print(debug)
-    #print('**********')
-    #if debug:
+    # print(debug)
+    # print('**********')
+    # if debug:
     #    print("\n", {"prompt": prompt, "outputs": outputs}, "\n")
-    
-    #print(answer)
-    return answer
 
+    # print(answer)
+    return answer
